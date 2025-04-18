@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.5.3/dist/css/bootstrap.min.css" integrity="sha384-TX8t27EcRE3e/ihU7zmQxVncDAy5uIKz4rEkgIXeMed4M0jlfIDPvg6uqKI2xXr2" crossorigin="anonymous">
+    <title>Document</title>
+    <style>
+        .more{
+            color: green;
+        }
+        .less{
+            color: orange;
+        }
+        .none{
+            color: red;
+        }
+        .more,.less,.none{
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div id="mainwrapper">
+        <div class="container-fluid bg-secondary py-1 d-flex justify-content-between align-items-baseline fixed-top">
+            <a href="#"  @click.prevent="isvisible=false" class="text-warning my-auto" style="text-decoration: none ;cursor: pointer;"> Products</a> 
+            <p class="text-white d-flex justify-content-end align-items-center my-auto"><span> {{cart.items.length}}</span>&nbsp; <span v-if="cart.items.length==1"> item &nbsp;</span>  <span v-else> items &nbsp;</span> total &nbsp;<span>{{ getTotalPrice }} $</span>&nbsp;<button class="btn btn-primary" @click="isvisible=true">showCart</button></p>
+        </div><!--header -->
+        <div v-if="isvisible==false" style="width: 100%" class=" products row justify-content-center mt-5 pt-5 ">
+            <div   v-for="product in products" :key="product.id"  class="my-2 mx-1 card col-md-5 col-xl-3">
+                <img  :src="product.image" :title="product.name">
+                <h5 class="w-100 mt-1 text-center">{{product.name}}</h5>
+                <p>{{product.description}}</p>
+                <div class="container-fluid" style="background-color: antiquewhite;">
+                    <div class="d-flex justify-content-between align-items-baseline">
+                        <p :class="[product.instock>=5?'more':'',product.instock<5?'less':'',product.instock==0?'none':'']" >Instock : {{product.instock}}</p>
+                        <button class="my-auto btn btn-primary " v-on:click="addCart(product)" style="height: 35px;" :disabled="product.instock==0">Add to cart</button>
+                    </div>
+                </div>
+            </div>
+        </div><!--End of products div -->
+        <div v-else>
+        <div class="text-danger text-center  mt-5 pt-5 "  v-if="cart.items.length==0" >
+            There is no element is added to the cart
+        </div>
+        <table  style="width: 100%;" class=" container  mt-5 pt-5 mx-auto table table-stripped table-border table-center" v-else>
+                <thead class="text-center">
+                    <tr >
+                        <th>ID</th>
+                        <th>Name</th>
+                        <th>price</th>
+                        <th>quantity</th>
+                        <th>actions</th>
+                        <th>total price</th>
+                        
+                    </tr>
+                </thead>
+                <tbody class="text-center">
+                    <tr v-for="item in cart.items">
+                        <td>{{item.product.id}}</td>
+                        <td>{{item.product.name}}</td>
+                        <td>{{item.product.price}}</td>
+                        <td>{{item.quantity}}</td>
+                        <td>
+                            <button class="btn btn-danger" @click="insertInto(item)" :disabled="item.product.instock==0">+</button>  &nbsp; | &nbsp;
+                            <button class="btn btn-secondary" @click="decreaseFrom(item)">-</button>
+                        </td>
+                        <td>{{item.quantity*item.product.price}}</td>
+                    </tr>
+                    <tr  >
+                        <th colspan="4" class="text-center">Total : </th>
+                        <th colspan="4" class="text-center">{{getTotalPrice}}</th>
+                    </tr>
+                    <tr >
+                        <th colspan="4" class="text-center">Tax : </th>
+                        <th colspan="4" class="text-center">{{getTotalPrice*0.1}}</th>
+                    </tr>
+                    <tr >
+                        <th colspan="4"  class="text-center">Grand Total :  </th>
+                        <th colspan="4" class="text-center">{{getTotalPrice+(getTotalPrice*0.1)}}</th>
+                    </tr>
+                </tbody>
+        </table>
+    </div>
+        <div class="footer"></div>
+    </div>
+    
+
+    </div>
+</body>
+<script src="products.js"></script>
+<script>
+     Vue.createApp({
+        data:()=>({
+            isvisible:false , 
+            products:products,
+            cart:{
+                items:[]
+            }
+        }),
+        methods: {
+            addCart(product){
+                if (!this.checkExist(product)){
+                    this.cart.items.push({
+                    product:product,
+                    quantity:1
+                });
+                
+                }else{
+                    let targetItem;
+                    for (let i = 0 ; i<this.cart.items.length;i++){
+                        if (this.cart.items[i].product.id == product.id){
+                            targetItem=this.cart.items[i];
+                            break;
+                    }
+                    
+                }
+                targetItem.quantity++;
+            }
+                
+                product.instock--;
+            },
+            checkExist(product){
+                for (let i = 0 ; i<this.cart.items.length;i++){
+                    if (this.cart.items[i].product.id == product.id){
+                        return true ; 
+                    }
+                }    
+                        return false
+            },
+            insertInto(item){
+            if (item.product.instock > 0) {
+            item.quantity++;
+            item.product.instock-- ; 
+            }
+        },
+        decreaseFrom(item){
+            item.quantity--;
+            if(item.quantity==0){
+            let itemIndex ; 
+            for (let i =0 ; i < this.cart.items.length;i++){
+                if(this.cart.items[i].product.id ==item.product.id){
+                    itemIndex=i ;
+                    break; 
+                }
+            }
+            this.cart.items.splice(itemIndex,1);
+           
+            item.product.instock++;
+        }
+    }
+},
+        
+        computed:{
+            getTotalPrice(){
+                let result = 0  ; 
+                for (let i=0; i< this.cart.items.length;i++){
+                    result+= this.cart.items[i].product.price*this.cart.items[i].quantity ;
+                }
+                return result ; 
+            }
+        }
+    }).mount("#mainwrapper")
+
+</script>
+</html>
